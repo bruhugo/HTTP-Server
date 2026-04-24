@@ -9,3 +9,8 @@ In order to understand more about HTTP and it's implemetations, I will try to wr
 - Routing
 - Persistent connections
 
+### Namespaces 
+
+server
+|----basic
+|----network
