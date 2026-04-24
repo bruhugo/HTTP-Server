@@ -16,6 +16,12 @@ namespace network
 
 using HeaderList = vector<string>;
 
+namespace HeaderTypes {
+const string ContentLength = "Content-Length";
+const string Accept = "Accept";
+const string AcceptCharset = "Accept-Charset";
+}
+
 struct Headers {
 
 public:

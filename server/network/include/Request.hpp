@@ -52,12 +52,11 @@ private:
         REQUEST_DONE
     };
 
-    bool parseRequestLine(string& buffer);
-    bool parseHeaders(string& buffer);
-    bool parseBody( string& buffer);
+    bool parseRequestLine(string_view buffer);
+    bool parseHeaders(string_view buffer);
+    bool parseBody( string_view buffer);
 
-    bool parseLine(string& buffer, string& line);
-    vector<string> parseTokens(string& line);
+    bool parseLine(string_view buffer, string& line);
 
     State state;
 
