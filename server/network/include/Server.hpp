@@ -1,8 +1,10 @@
+#include "Connection.hpp"
+#include "../../basic/include/ThreadPool.hpp"
+
 #include <cstdint>
 #include <vector>
-#include "../../basic/include/ThreadPool.hpp"
-#include "Connection.hpp"
-#include "mutex"
+#include <mutex>
+#include <unordered_map>
 
 namespace server {
 
@@ -15,11 +17,11 @@ public:
 
     void listenPort(std::string port);
 private: 
-    void acceptConnection(int fd);
+    void acceptConnection();
     void handleRequest(int fd);
     void closeConnection(int conn);
 
-    std::vector<int> connections;
+    std::unordered_map<int, Connection> connections;
     basic::ThreadPool tp;
 
     std::mutex mu;

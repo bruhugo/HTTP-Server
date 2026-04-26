@@ -6,16 +6,12 @@
 using namespace server::network;
 
 // --- REQUEST --- 
-Request::Request(int conn): 
-connsocket{conn}{}
+Request::Request(int conn): connsocket{conn}{}
 
 // --- REQUEST PARSER --- 
 RequestParser::RequestParser(int connfd): fd{connfd}, request(fd){}
 
 Request RequestParser::getRequest() {
-    if (state == REQUEST_ERROR) 
-        throw std::runtime_error("an error occured while parsing");
-
     if (state != REQUEST_DONE) 
         // TODO: replace by HttpError later
         throw std::runtime_error("request is not done parsing");
@@ -37,16 +33,7 @@ struct Header {
 };
 static Header parseHeaderLine(std::string& line);
 
-bool RequestParser::parse(){
-    char rawbuff[BUFFER_SIZE];
-    int read = recv(fd, rawbuff, BUFFER_SIZE, 0);
-    if (read == -1 || read == 0){
-        state = REQUEST_ERROR;
-        return true;
-    }
-
-    std::string_view buffer(rawbuff);
-
+bool RequestParser::parse(std::string_view buffer){
     offset = 0;
     if (state == REQUEST_LINE && parseRequestLine(buffer)){
         state = REQUEST_HEADERS;
@@ -56,7 +43,7 @@ bool RequestParser::parse(){
 
     if (state == REQUEST_HEADERS && parseHeaders(buffer)) {
         if (canHaveBody && contentLength > 0){
-            state = REQUEST_DONE;
+            state = REQUEST_BODY;
         }else {
             state = REQUEST_DONE;
             return true;
@@ -77,11 +64,13 @@ bool RequestParser::parseRequestLine(std::string_view buffer){
         if (tokens.size() != 3)
             throw std::runtime_error("bad request provided.");
 
-        Method method = parseMethod(tokens.at(0));
-        canHaveBody = methodHasBody(method);
-
+        request.method = parseMethod(tokens.at(0));
         request.path = parsePath(tokens.at(1));
-        request.httpVersion = (tokens.at(2));
+        request.httpVersion = parseHttpVersion(tokens.at(2));
+
+        canHaveBody = methodHasBody(request.method);
+
+        return true;
     }else {
         return false;
     }
@@ -107,7 +96,7 @@ bool RequestParser::parseHeaders(std::string_view buffer){
 }
 
 bool RequestParser::parseBody(std::string_view buffer){
-    // TODO: maybe support chunked content in an unlikely future
+    // TODO: maybe support chunked content in the request in an unlikely future
     body.append(buffer);
     return body.size() >= contentLength;
 }
@@ -116,10 +105,10 @@ bool RequestParser::parseLine(std::string_view buffer, std::string& line) {
     char prev = '\0';
     if (!line.empty()) prev = line.back();
 
-    for (int i = offset; i < static_cast<int>(buffer.size()); i++){
+    for (size_t i = offset; i < buffer.size(); ++i){
         char cur = buffer.at(i);
         if (prev == '\r' && cur == '\n') {
-            line.pop_back();
+            line.pop_back(); // remove the \r
             offset = i + 1;
             return true;
         }

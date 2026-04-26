@@ -1,28 +1,23 @@
 #pragma once
 
+#include "Request.hpp"
+
 #include <functional>
+#include <optional>
 
 namespace server
 {
 namespace network 
 {
 
-enum class ConnectionState {
-    OPEN, CLOSED, CLOSING
-};
-
-using CloseFunc = std::function<void(int fd)>;
-
 class Connection {
 public:
-    Connection(int fd, CloseFunc func);
-    ~Connection();
-
-    void close();
+    Connection(int fd);
+    std::optional<Request> parseRequest();
+    void writeResponse();
 private:
+    RequestParser parser;
     int fd;
-    int epollfd;
-    CloseFunc closeFunc;
 };
 
 } // basic

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Connection.hpp>
 #include <Header.hpp>
 #include <Types.hpp>
@@ -38,14 +40,13 @@ public:
     Request getRequest();
 
     // Returns true if it's done parsing
-    bool parse();
+    bool parse(std::string_view buffer);
 private:
     enum State {
         REQUEST_LINE,
         REQUEST_HEADERS, 
         REQUEST_BODY, 
-        REQUEST_DONE,
-        REQUEST_ERROR
+        REQUEST_DONE
     };
 
     bool parseRequestLine(std::string_view buffer);

@@ -77,22 +77,22 @@ void Server::listenPort(std::string port){
         for (int i = 0; i < eventn; ++i){
             epoll_event event = events[i];
             if (event.data.fd == serverfd){
-                int connfd = accept(serverfd, nullptr, 0);
-                if (connfd == -1){
-                    perror("accepting connection");
-                    continue;
-                }
-                acceptConnection(connfd);
+                acceptConnection();
             }else {
-                tp.submit([this, event]{
-                    handleRequest(event.data.fd);
-                });
+                handleRequest(event.data.fd);
             }
         }
     }
 }
 
-void Server::acceptConnection(int fd){
+void Server::acceptConnection(){
+    int fd = accept(serverfd, nullptr, 0);
+    if (fd == -1){
+        throw std::system_error(errno,
+        std::generic_category(), 
+        "error accepting request");
+    }
+
     epoll_event event;
     event.data.fd = fd;
     event.events = EPOLLIN;
@@ -102,35 +102,30 @@ void Server::acceptConnection(int fd){
     }
 
     std::lock_guard<std::mutex> lk(mu);
-    connections.push_back(fd);
+    connections.emplace(fd, Connection(fd));
 }
 
 void Server::handleRequest(int fd){ 
-    // parse
-    RequestParser parser(fd);
-    while (!parser.parse());
-    Request request = parser.getRequest();
+    tp.submit([this, fd]{
+        std::lock_guard<std::mutex> lk(mu);
+        Connection conn = connections[fd];
 
-    // find path
+        std::optional<Request> request = conn.parseRequest();
+        if (!request.has_value())
+            // request is not done yet
+            return;
 
-    // execute
+        // handle request later
 
-    // send response
-    
-    // close if Connection: close
+        // close connection if request demands it
+    });
 }
 
 void Server::closeConnection(int fd){
     std::lock_guard<std::mutex> lk(mu);
-    auto it = std::find(connections.begin(), connections.end(), fd);
-    if (it == connections.end())
-        return;
-    connections.erase(it);
-
-    epoll_event event;
-    event.data.fd = fd;
-    event.events = EPOLLIN;
-    epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, &event);
-
+    if (epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, nullptr) == -1){
+        perror("failed to remove connection from epoll");
+    }
+    connections.erase(fd);
     close(fd);
 }
