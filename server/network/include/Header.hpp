@@ -6,35 +6,33 @@
 #include <optional>
 #include <stdexcept>
 
-using namespace std;
-
 namespace server
 {
 
 namespace network
 {
 
-using HeaderList = vector<string>;
+using HeaderList = std::vector<std::string>;
 
 namespace HeaderTypes {
-const string ContentLength = "Content-Length";
-const string Accept = "Accept";
-const string AcceptCharset = "Accept-Charset";
+const std::string ContentLength = "Content-Length";
+const std::string Accept = "Accept";
+const std::string AcceptCharset = "Accept-Charset";
 }
 
 struct Headers {
 
 public:
-    optional<HeaderList> get(string);
-    optional<string> getFirst(string);
+    std::optional<HeaderList> get(std::string);
+    std::optional<std::string> getFirst(std::string);
 
     // Overrides all previous set values of the given header
-    void set(string, string);
+    void set(std::string, std::string);
 
     // Adds to the header list
-    void add(string, string);
+    void add(std::string, std::string);
 private:
-    unordered_map<string, HeaderList> headers; 
+    std::unordered_map<std::string, HeaderList> headers; 
 };
 
 } // namespace network

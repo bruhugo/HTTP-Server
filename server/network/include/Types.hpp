@@ -1,7 +1,5 @@
 #include <string>
 
-using namespace std;
-
 namespace server
 {
 
@@ -22,7 +20,7 @@ enum class Method {
     CONNECT
 };
 
-Method getMethod(string m){
+Method getMethod(std::string m){
     if (m == "OPTIONS")     return Method::OPTIONS;
     if (m == "GET")         return Method::GET;
     if (m == "HEAD")        return Method::HEAD;

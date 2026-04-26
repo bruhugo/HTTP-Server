@@ -6,12 +6,10 @@
 #include <condition_variable>
 #include <thread>
 
-using namespace std;
-
 namespace server {
 namespace basic {
 
-using Task = function<void()>;
+using Task = std::function<void()>;
 using ThreadId = uint32_t;
 enum class TPState {
     RUNNING, STOPPED
@@ -22,14 +20,14 @@ public:
     ThreadPool(uint32_t threads = 10);
     ~ThreadPool();
 
-    void Submit(Task task);
+    void submit(Task task);
 private:
     void threadEventLoop(ThreadId threadid);
 
-    queue<Task> tasks;
-    vector<thread> threads;
-    condition_variable cv;
-    mutex mu;
+    std::queue<Task> tasks;
+    std::vector<std::thread> threads;
+    std::condition_variable cv;
+    std::mutex mu;
     TPState state;
 };
 

@@ -2,8 +2,7 @@
 #include <vector>
 #include "../../basic/include/ThreadPool.hpp"
 #include "Connection.hpp"
-
-using namespace std;
+#include "mutex"
 
 namespace server {
 
@@ -14,10 +13,18 @@ public:
     Server(uint32_t threads);
     ~Server();
 
-    void start();
+    void listenPort(std::string port);
 private: 
+    void acceptConnection(int fd);
+    void handleRequest(int fd);
+    void closeConnection(int conn);
+
+    std::vector<int> connections;
     basic::ThreadPool tp;
-    vector<Connection> connectins;
+
+    std::mutex mu;
+    int epollfd;
+    int serverfd;
 };
 
 } // network

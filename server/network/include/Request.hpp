@@ -1,74 +1,72 @@
 #include <Connection.hpp>
 #include <Header.hpp>
+#include <Types.hpp>
 
 #include <cstdint>
 #include <memory>
 
-
-using namespace std;
+#define BUFFER_SIZE 5000
 
 namespace server {
 
 namespace network {
 
-
-
 struct Path {
-    string URL;
-    unordered_map<string, vector<string>> queries; 
+    std::string URL;
+    std::unordered_map<std::string, std::vector<std::string>> queries; 
 };
 
 class Request
 {
 public:
-    Request(shared_ptr<Connection> connPtr);
-
-    shared_ptr<Connection> connPtr;
+    Request(int conn);
 
     Path path;
     Headers headers;
     Method method;
-    string body;
-    string httpVersion;
-private:
-
+    std::string body;
+    std::string httpVersion;
+    int connsocket;
 };
 
 
 class RequestParser {
 public:
-    RequestParser(shared_ptr<Connection> connPtr);
+    RequestParser(int fd);
     // Gets the request
     // Throws if it was not done parsing
     Request getRequest();
 
     // Returns true if it's done parsing
-    bool parse(string& buffer);
+    bool parse();
 private:
     enum State {
         REQUEST_LINE,
         REQUEST_HEADERS, 
         REQUEST_BODY, 
-        REQUEST_DONE
+        REQUEST_DONE,
+        REQUEST_ERROR
     };
 
-    bool parseRequestLine(string_view buffer);
-    bool parseHeaders(string_view buffer);
-    bool parseBody( string_view buffer);
+    bool parseRequestLine(std::string_view buffer);
+    bool parseHeaders(std::string_view buffer);
+    bool parseBody(std::string_view buffer);
 
-    bool parseLine(string_view buffer, string& line);
+    bool parseLine(std::string_view buffer, std::string& line);
 
     State state;
 
-    string requestLine;
-    string currentHeader;
-    string body;
+    std::string requestLine;
+    std::string currentHeader;
+    std::string body;
 
     Request request;
     size_t offset;
 
     bool canHaveBody;
     size_t contentLength;
+
+    int fd;
 };
 
 } // network
