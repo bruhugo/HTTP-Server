@@ -1,8 +1,8 @@
-#include "../include/ThreadPool.hpp"
+#include "ThreadPool.hpp"
 
 using namespace server::basic;
 
-ThreadPool::ThreadPool(uint32_t t = 10): 
+ThreadPool::ThreadPool(uint32_t t): 
 state{TPState::RUNNING}{
     for (ThreadId id = 0; id < t; id++) {
         threads.emplace_back(std::thread([this, id]{

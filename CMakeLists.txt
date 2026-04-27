@@ -7,3 +7,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(server/basic)
 add_subdirectory(server/network)
+add_subdirectory(examples)

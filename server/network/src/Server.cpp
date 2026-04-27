@@ -2,6 +2,7 @@
 #include "Request.hpp"
 
 #include <algorithm>
+#include <system_error>
 
 #include <netinet/in.h>
 #include <netdb.h>
@@ -24,36 +25,39 @@ Server::~Server() {}
 void Server::listenPort(std::string port){
 
     addrinfo hint, *res, *p; 
-    sockaddr addr;
     epoll_event ev, events[MAX_EVENTS];
 
+    memset(&hint, 0, sizeof(hint));
     hint.ai_family = AF_UNSPEC;
     hint.ai_protocol = IPPROTO_TCP;
     hint.ai_flags = AI_PASSIVE;
     hint.ai_socktype = SOCK_STREAM;
 
-    if (getaddrinfo(nullptr, port.data(), &hint, &res) != 0) 
+    if (getaddrinfo(nullptr, port.c_str(), &hint, &res) != 0) 
         throw std::runtime_error(strerror(errno));
 
-    freeaddrinfo(&hint);
     for (p = res; p != nullptr; p = p->ai_next){
         serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (serverfd == 0) {
-            perror("creating socket");
+        if (serverfd == -1) {
             continue;
         }
 
+        int yes = 1;
+        setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+
         int err = bind(serverfd, p->ai_addr, p->ai_addrlen);
         if (err != 0) {
-            perror("binding address");
+            close(serverfd);
             continue;
         }
 
         break;
     }
 
-    if (serverfd == 0)
-        throw std::runtime_error("error opening socket");
+    freeaddrinfo(res);
+
+    if (p == nullptr)
+        throw std::runtime_error("error opening socket or binding");
 
     int err = listen(serverfd, 20);
     if (err != 0)
@@ -69,10 +73,11 @@ void Server::listenPort(std::string port){
         throw std::runtime_error(strerror(errno));
 
     for (;;) {
-        int eventn = epoll_wait(epollfd, events, MAX_EVENTS, 0);
-        if (eventn == -1) 
-            // TODO: maybe change to resilient error handling
+        int eventn = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+        if (eventn == -1) {
+            if (errno == EINTR) continue;
             throw std::runtime_error(strerror(errno));
+        }
 
         for (int i = 0; i < eventn; ++i){
             epoll_event event = events[i];
@@ -88,43 +93,47 @@ void Server::listenPort(std::string port){
 void Server::acceptConnection(){
     int fd = accept(serverfd, nullptr, 0);
     if (fd == -1){
-        throw std::system_error(errno,
-        std::generic_category(), 
-        "error accepting request");
+        return; 
     }
 
     epoll_event event;
     event.data.fd = fd;
     event.events = EPOLLIN;
     if(epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event) == -1){
-        perror("error adding fd to epoll");
+        close(fd);
         return;
     }
 
     std::lock_guard<std::mutex> lk(mu);
-    connections.emplace(fd, Connection(fd));
+    connections.emplace(std::piecewise_construct, 
+                        std::forward_as_tuple(fd), 
+                        std::forward_as_tuple(fd));
 }
 
 void Server::handleRequest(int fd){ 
     tp.submit([this, fd]{
         std::lock_guard<std::mutex> lk(mu);
-        Connection conn = connections[fd];
+        auto it = connections.find(fd);
+        if (it == connections.end()) return;
 
-        std::optional<Request> request = conn.parseRequest();
-        if (!request.has_value())
-            // request is not done yet
-            return;
+        Connection& conn = it->second;
 
-        // handle request later
-
-        // close connection if request demands it
+        try {
+            std::optional<Request> request = conn.parseRequest();
+            if (!request.has_value())
+                return;
+            
+            // TODO: logic to handle request
+        } catch (const std::exception& e) {
+            // handle error or close connection
+        }
     });
 }
 
 void Server::closeConnection(int fd){
     std::lock_guard<std::mutex> lk(mu);
     if (epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, nullptr) == -1){
-        perror("failed to remove connection from epoll");
+        // ignore error if already removed
     }
     connections.erase(fd);
     close(fd);

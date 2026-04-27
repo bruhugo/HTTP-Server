@@ -1,25 +1,34 @@
 #pragma once
 
-#include "Request.hpp"
-
 #include <functional>
 #include <optional>
+#include <memory>
 
 namespace server
 {
 namespace network 
 {
 
+class Request;
+class RequestParser;
+
 class Connection {
 public:
     Connection(int fd);
+    ~Connection();
+
+    Connection(Connection&&) noexcept;
+    Connection& operator=(Connection&&) noexcept;
+    Connection(const Connection&) = delete;
+    Connection& operator=(const Connection&) = delete;
+
     std::optional<Request> parseRequest();
     void writeResponse();
 private:
-    RequestParser parser;
+    std::unique_ptr<RequestParser> parser;
     int fd;
 };
 
-} // basic
+} // network
     
 } // server

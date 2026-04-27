@@ -1,17 +1,20 @@
 #pragma once
 
-#include <Connection.hpp>
-#include <Header.hpp>
-#include <Types.hpp>
+#include "Header.hpp"
+#include "Types.hpp"
 
 #include <cstdint>
 #include <memory>
-
-#define BUFFER_SIZE 5000
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <string_view>
 
 namespace server {
 
 namespace network {
+
+class Connection;
 
 struct Path {
     std::string URL;

@@ -2,28 +2,28 @@
 
 using namespace server::network;
 
-optional<HeaderList> Headers::get(string headerName) {
+std::optional<HeaderList> Headers::get(std::string headerName) {
     try {
         auto value = headers.at(headerName);
-        return make_optional<HeaderList>(value);
-    }catch (out_of_range &err) {
-        return nullopt;
+        return std::make_optional<HeaderList>(value);
+    }catch (std::out_of_range &err) {
+        return std::nullopt;
     }
 }
 
-optional<string> Headers::getFirst(string headerName) {
+std::optional<std::string> Headers::getFirst(std::string headerName) {
     try {
         auto value = headers.at(headerName);
-        return make_optional<string>(value.front());
-    }catch (out_of_range &err) {
-        return nullopt;
+        return std::make_optional<std::string>(value.front());
+    }catch (std::out_of_range &err) {
+        return std::nullopt;
     }
 }
 
-void Headers::set(string key, string value) {
+void Headers::set(std::string key, std::string value) {
     auto it = headers.find(key);
     if (it == headers.end()) {
-        headers.emplace(key, vector<string, HeaderList>({value}));
+        headers.emplace(key, HeaderList({value}));
     }else {
         (*it).second.push_back(value);
     }

@@ -1,4 +1,5 @@
 #include "Connection.hpp"
+#include "Request.hpp"
 
 #include <system_error>
 #include <optional>
@@ -10,7 +11,11 @@
 
 using namespace server::network;
 
-Connection::Connection(int socket): fd{socket}, parser(fd){};
+Connection::Connection(int socket): fd{socket}, parser(std::make_unique<RequestParser>(fd)){};
+Connection::~Connection() = default;
+
+Connection::Connection(Connection&&) noexcept = default;
+Connection& Connection::operator=(Connection&&) noexcept = default;
 
 std::optional<Request> Connection::parseRequest(){
     char buffer[BUFFER_SIZE];
@@ -28,8 +33,8 @@ std::optional<Request> Connection::parseRequest(){
         }else if (read == 0){
             throw std::runtime_error("connection closed");
         }else {
-            if (parser.parse(std::string_view(buffer)))
-                return std::make_optional(parser.getRequest());
+            if (parser->parse(std::string_view(buffer, read)))
+                return std::make_optional(parser->getRequest());
         }
     }
 

@@ -1,10 +1,13 @@
+#pragma once
+
 #include "Connection.hpp"
-#include "../../basic/include/ThreadPool.hpp"
+#include "ThreadPool.hpp"
 
 #include <cstdint>
 #include <vector>
 #include <mutex>
 #include <unordered_map>
+#include <string>
 
 namespace server {
 
