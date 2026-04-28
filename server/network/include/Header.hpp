@@ -31,6 +31,8 @@ public:
 
     // Adds to the header list
     void add(std::string, std::string);
+
+    std::unordered_map<std::string, HeaderList> data() const;
 private:
     std::unordered_map<std::string, HeaderList> headers; 
 };

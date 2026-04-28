@@ -21,10 +21,20 @@ std::optional<std::string> Headers::getFirst(std::string headerName) {
 }
 
 void Headers::set(std::string key, std::string value) {
+    headers.erase(key);
+    headers.emplace(key, HeaderList({value}));
+}
+
+void Headers::add(std::string key, std::string value){
     auto it = headers.find(key);
     if (it == headers.end()) {
         headers.emplace(key, HeaderList({value}));
     }else {
         (*it).second.push_back(value);
     }
+}
+
+
+std::unordered_map<std::string, HeaderList> Headers::data() const {
+    return headers;
 }

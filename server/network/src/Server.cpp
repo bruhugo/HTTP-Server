@@ -132,9 +132,7 @@ void Server::handleRequest(int fd){
 
 void Server::closeConnection(int fd){
     std::lock_guard<std::mutex> lk(mu);
-    if (epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, nullptr) == -1){
-        // ignore error if already removed
-    }
+    epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, nullptr);
     connections.erase(fd);
     close(fd);
 }
