@@ -2,6 +2,7 @@
 
 #include "Connection.hpp"
 #include "ThreadPool.hpp"
+#include "Context.hpp"
 
 #include <cstdint>
 #include <vector>

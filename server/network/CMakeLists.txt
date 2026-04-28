@@ -5,6 +5,7 @@ set(NETWORK_SOURCES
     src/Server.cpp
     src/Types.cpp
     src/Response.cpp
+    src/Context.cpp
 )
 
 add_library(network ${NETWORK_SOURCES})
