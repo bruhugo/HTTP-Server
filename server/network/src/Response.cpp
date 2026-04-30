@@ -5,7 +5,7 @@
 
 using namespace server::network;
 
-Response::Response(): statusCode{StatusOK}{}
+Response::Response(): statusCode{Status::OK}{}
 Response::Response(int status, std::string msg): 
     statusCode{status}, body{msg}{}
 

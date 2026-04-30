@@ -17,7 +17,7 @@ public:
 
     void setStatusCode(int code) noexcept;
 
-    void setBody(std::string);
+    void setBody(std::string) noexcept;
 
     std::string encode();
 

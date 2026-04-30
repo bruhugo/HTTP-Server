@@ -7,16 +7,16 @@ namespace network
 {
 
 const std::unordered_map<int, std::string> statusMessages = {
-    {StatusOK, "OK"},
-    {StatusCreated, "Created"},
-    {StatusNoContent, "No Content"},
-    {StatusBadRequest, "Bad Request"},
-    {StatusUnauthorized, "Unauthorized"},
-    {StatusForbidden, "Forbidden"},
-    {StatusNotFound, "Not Found"},
-    {StatusConflict, "Conflict"},
-    {StatusInternalServerError, "Internal Server Error"},
-    {StatusNotImplemented, "Not Implemented"}
+    {Status::OK, "OK"},
+    {Status::Created, "Created"},
+    {Status::NoContent, "No Content"},
+    {Status::BadRequest, "Bad Request"},
+    {Status::Unauthorized, "Unauthorized"},
+    {Status::Forbidden, "Forbidden"},
+    {Status::NotFound, "Not Found"},
+    {Status::Conflict, "Conflict"},
+    {Status::InternalServerError, "Internal Server Error"},
+    {Status::NotImplemented, "Not Implemented"}
 };
 
 Method getMethod(std::string m){

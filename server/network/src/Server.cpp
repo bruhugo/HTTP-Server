@@ -19,7 +19,7 @@
 
 using namespace server::network;
 
-Server::Server(uint32_t threads): tp(threads) {}
+Server::Server(uint32_t threads): state{ServerState::STARTING}, tp(threads) {}
 Server::~Server() {}
 
 void Server::listenPort(std::string port){
@@ -72,6 +72,8 @@ void Server::listenPort(std::string port){
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, serverfd, &ev) == -1)
         throw std::runtime_error(strerror(errno));
 
+    state = ServerState::LISTENING;
+
     for (;;) {
         int eventn = epoll_wait(epollfd, events, MAX_EVENTS, -1);
         if (eventn == -1) {
@@ -119,9 +121,14 @@ void Server::handleRequest(int fd){
         Connection& conn = it->second;
 
         try {
-            std::optional<Request> request = conn.parseRequest();
-            if (!request.has_value())
+            std::optional<Request> requestopt = conn.parseRequest();
+            if (!requestopt.has_value())
                 return;
+            
+            Request req = requestopt.value();
+            
+            RadixQueryResult res = radixTree.query(req.method, req.path.URL);
+            
             
             // TODO: logic to handle request
         } catch (const std::exception& e) {
@@ -135,4 +142,51 @@ void Server::closeConnection(int fd){
     epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, nullptr);
     connections.erase(fd);
     close(fd);
+}
+
+void Server::use(std::string path, Handler handler){
+    assertServerState(ServerState::STARTING);
+    radixTree.addFilter(path, handler);
+}
+
+void Server::get(std::string path, Handler handler){
+    assertServerState(ServerState::STARTING);
+    radixTree.addHandler(Method::GET, path, handler);
+}
+
+void Server::post(std::string path, Handler handler){
+    assertServerState(ServerState::STARTING);
+    radixTree.addHandler(Method::POST, path, handler);
+}
+
+void Server::put(std::string path, Handler handler){
+    assertServerState(ServerState::STARTING);
+    radixTree.addHandler(Method::PUT, path, handler);
+}
+
+void Server::patch(std::string path, Handler handler){
+    assertServerState(ServerState::STARTING);
+    radixTree.addHandler(Method::PATCH, path, handler);
+}
+
+void Server::del(std::string path, Handler handler){
+    assertServerState(ServerState::STARTING);
+    radixTree.addHandler(Method::DELETE, path, handler);
+}
+
+void Server::request(Method method, std::string path, Handler handler){
+    assertServerState(ServerState::STARTING);
+    radixTree.addHandler(method, path, handler);
+}
+
+void Server::assertServerState(ServerState desiredState){
+    if (state != desiredState){
+        throw std::runtime_error("assert server state failed");
+    }
+}
+
+void Server::assertServerStateNot(ServerState nonDesiredState){
+    if (state == nonDesiredState){
+        throw std::runtime_error("assert server state failed");
+    }
 }

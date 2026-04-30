@@ -6,6 +6,7 @@ set(NETWORK_SOURCES
     src/Types.cpp
     src/Response.cpp
     src/Context.cpp
+    src/RadixTree.cpp
 )
 
 add_library(network ${NETWORK_SOURCES})

@@ -31,6 +31,7 @@ public:
     Method method;
     std::string body;
     std::string httpVersion;
+private:
     int connsocket;
 };
 
