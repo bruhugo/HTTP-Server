@@ -1,5 +1,6 @@
 set(BASIC_SOURCES
     src/ThreadPool.cpp
+    src/Logger.cpp
 )
 
 add_library(basic ${BASIC_SOURCES})

@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "Request.hpp"
+#include "Logger.hpp"
 
 #include <algorithm>
 #include <system_error>
@@ -24,6 +25,8 @@ Server::~Server() {}
 
 void Server::listenPort(std::string port){
 
+    LOG_INFO << "Server starting on port " << port;
+
     addrinfo hint, *res, *p; 
     epoll_event ev, events[MAX_EVENTS];
 
@@ -35,7 +38,7 @@ void Server::listenPort(std::string port){
 
     if (getaddrinfo(nullptr, port.c_str(), &hint, &res) != 0) 
         throw std::runtime_error(strerror(errno));
-
+    
     for (p = res; p != nullptr; p = p->ai_next){
         serverfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
         if (serverfd == -1) {
@@ -50,6 +53,8 @@ void Server::listenPort(std::string port){
             close(serverfd);
             continue;
         }
+
+        LOG_DEBUG << "Server socket bound to port and IP address.";
 
         break;
     }
@@ -73,6 +78,8 @@ void Server::listenPort(std::string port){
         throw std::runtime_error(strerror(errno));
 
     state = ServerState::LISTENING;
+
+    LOG_INFO << "Server is listening";
 
     for (;;) {
         int eventn = epoll_wait(epollfd, events, MAX_EVENTS, -1);
@@ -98,6 +105,8 @@ void Server::acceptConnection(){
         return; 
     }
 
+    LOG_DEBUG << "Connection accepted with fd " << fd;
+
     epoll_event event;
     event.data.fd = fd;
     event.events = EPOLLIN;
@@ -113,6 +122,8 @@ void Server::acceptConnection(){
 }
 
 void Server::handleRequest(int fd){ 
+    LOG_DEBUG << "Data coming from connection in fd " << fd;
+
     tp.submit([this, fd]{
         std::lock_guard<std::mutex> lk(mu);
         auto it = connections.find(fd);
@@ -128,7 +139,7 @@ void Server::handleRequest(int fd){
             Request req = requestopt.value();
             
             RadixQueryResult res = radixTree.query(req.method, req.path.URL);
-            
+            Context context;
             
             // TODO: logic to handle request
         } catch (const std::exception& e) {
@@ -145,36 +156,43 @@ void Server::closeConnection(int fd){
 }
 
 void Server::use(std::string path, Handler handler){
+    LOG_INFO << "Filter added on path " << path;
     assertServerState(ServerState::STARTING);
     radixTree.addFilter(path, handler);
 }
 
 void Server::get(std::string path, Handler handler){
+    LOG_INFO << "GET handler added on path " << path;
     assertServerState(ServerState::STARTING);
     radixTree.addHandler(Method::GET, path, handler);
 }
 
 void Server::post(std::string path, Handler handler){
+    LOG_INFO << "POST handler added on path " << path;
     assertServerState(ServerState::STARTING);
     radixTree.addHandler(Method::POST, path, handler);
 }
 
 void Server::put(std::string path, Handler handler){
+    LOG_INFO << "PUT handler added on path " << path;
     assertServerState(ServerState::STARTING);
     radixTree.addHandler(Method::PUT, path, handler);
 }
 
 void Server::patch(std::string path, Handler handler){
+    LOG_INFO << "PATCH handler added on path " << path;
     assertServerState(ServerState::STARTING);
     radixTree.addHandler(Method::PATCH, path, handler);
 }
 
 void Server::del(std::string path, Handler handler){
+    LOG_INFO << "DELETE handler added on path " << path;
     assertServerState(ServerState::STARTING);
     radixTree.addHandler(Method::DELETE, path, handler);
 }
 
 void Server::request(Method method, std::string path, Handler handler){
+    LOG_INFO << "Handler added on path " << path;
     assertServerState(ServerState::STARTING);
     radixTree.addHandler(method, path, handler);
 }

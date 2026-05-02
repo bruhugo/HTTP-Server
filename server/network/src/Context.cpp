@@ -5,6 +5,12 @@
 using namespace server::network;
 
 
+Filters::Filters() : root(nullptr), tail(nullptr), size(0) {}
+
+Filters::Filters(const Filters& other) : root(nullptr), tail(nullptr), size(0) {
+    add(&other);
+}
+
 Filters::~Filters(){
     Filter* cur = root;
     while (cur != nullptr){
@@ -30,13 +36,12 @@ void Filters::add(Handler handler){
     tail = tail->next;
 }
 
-void Filters::add(Filters* filters){
+void Filters::add(const Filters* filters){
     if (filters == nullptr) return;
 
-    if (root == nullptr){
-        root = filters->root;
+    Filter* cur = filters->root;
+    while (cur != nullptr){
+        add(cur->handler);
+        cur = cur->next;
     }
-
-    tail = filters->tail;
-    size += filters->size;
 }

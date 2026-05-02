@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Request.hpp"
 #include "Response.hpp"
 
@@ -20,13 +18,15 @@ struct Filter {
 
 class Filters {
 public:
+    Filters();
+    Filters(const Filters& other);
     ~Filters();
 
     Filter* root;
     Filter* tail;
     size_t size;
 
-    void add(Filters* filters);
+    void add(const Filters* filters);
     void add(Handler handler);
 };
 

@@ -14,6 +14,7 @@ namespace network{
 struct RadixTreeNode {
     RadixTreeNode();
     RadixTreeNode(std::string label);
+    ~RadixTreeNode();
 
     // use enum method values to map methods to handlers
     Handler handlers[static_cast<size_t>(Method::NUMBER)];
@@ -34,6 +35,9 @@ struct RadixQueryResult {
 
 class RadixTree {
 public:
+    RadixTree();
+    ~RadixTree();
+
     // sets the given handler for the given path.
     // throws if already set
     void addHandler(Method method, std::string path, Handler handler);

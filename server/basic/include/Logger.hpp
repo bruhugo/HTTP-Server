@@ -53,12 +53,13 @@ private:
 };
 
 
-#define LOG_FATAL       LogStream(__FILE__, __LINE__, LOG_LEVEL::FATAL)
-#define LOG_ERROR       LogStream(__FILE__, __LINE__, LOG_LEVEL::ERROR)
-#define LOG_WARNING     LogStream(__FILE__, __LINE__, LOG_LEVEL::WARNING)
-#define LOG_INFO        LogStream(__FILE__, __LINE__, LOG_LEVEL::INFO)
-#define LOG_DEBUG       LogStream(__FILE__, __LINE__, LOG_LEVEL::DEBUG)
-#define LOG_TRACE       LogStream(__FILE__, __LINE__, LOG_LEVEL::TRACE)
+}
+}
 
-}
-}
+#define LOG_FATAL       server::basic::LogStream(__FILE__, __LINE__, server::basic::LOG_LEVEL::FATAL)
+#define LOG_ERROR       server::basic::LogStream(__FILE__, __LINE__, server::basic::LOG_LEVEL::ERROR)
+#define LOG_WARNING     server::basic::LogStream(__FILE__, __LINE__, server::basic::LOG_LEVEL::WARNING)
+#define LOG_INFO        server::basic::LogStream(__FILE__, __LINE__, server::basic::LOG_LEVEL::INFO)
+#define LOG_DEBUG       server::basic::LogStream(__FILE__, __LINE__, server::basic::LOG_LEVEL::DEBUG)
+#define LOG_TRACE       server::basic::LogStream(__FILE__, __LINE__, server::basic::LOG_LEVEL::TRACE)
+

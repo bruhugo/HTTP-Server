@@ -4,8 +4,27 @@
 
 using namespace server::network;
 
-RadixTreeNode::RadixTreeNode(): label{""}, wildcard{false}{}
-RadixTreeNode::RadixTreeNode(std::string l): label{l}, wildcard{false}{}
+RadixTreeNode::RadixTreeNode(): label{""}, wildcard{false}, children(0){
+    filters = new Filters();
+}
+RadixTreeNode::RadixTreeNode(std::string l): label{l}, wildcard{false}, children(0){
+    filters = new Filters();
+}
+
+RadixTreeNode::~RadixTreeNode(){
+    delete filters;
+    for (auto child : children){
+        delete child;
+    }
+}
+
+RadixTree::RadixTree(){
+    root = new RadixTreeNode();
+}
+
+RadixTree::~RadixTree(){
+    delete root;
+}
 
 
 void RadixTree::addHandler(Method method, std::string path, Handler handler){
@@ -23,14 +42,14 @@ std::vector<std::string> RadixTree::breakPath(std::string& str){
     std::vector<std::string> paths;
     
     size_t start = 0;
-    size_t end = str.find('/');
+    size_t end = str.find('/', start);
 
     while (end != str.npos){
         if (end > start){
             paths.push_back(str.substr(start, end - start));
         }
         start = end + 1;
-        end = str.find('/');
+        end = str.find('/', start);
     }
 
     if (start < str.npos){
