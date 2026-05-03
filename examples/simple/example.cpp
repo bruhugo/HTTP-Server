@@ -5,8 +5,17 @@ using namespace server::network;
 int main(){
     Server server(20);
 
-    server.get("/echo", [](Context& ctx){
-        std::string body = ctx.req.body;
+    server.get("/hello", [](Context& ctx){
+        ctx.res.setBody("hello my friend");
+    });
+
+    server.get("/echo/:echomsg", [](Context& ctx){
+        auto msg = ctx.params.at("echomsg");
+        ctx.res.setBody(msg);
+    });
+
+    server.post("/echo", [](Context& ctx){
+        auto body = ctx.req.body;
         ctx.res.setBody(body);
     });
 

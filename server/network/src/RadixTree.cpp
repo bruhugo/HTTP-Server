@@ -134,7 +134,8 @@ RadixQueryResult RadixTree::query(Method method, std::string path){
     RadixTreeNode* curNode = root; 
     filters.add(curNode->filters);
 
-    for (std::string curPath : paths){
+    for (int i = 0; i < paths.size(); ++i){
+        std::string curPath = paths.at(i);
         MatchChildren match = findChildren(curNode, curPath);
         if (!match)
             // TODO: make it HTTP error later
@@ -144,7 +145,9 @@ RadixQueryResult RadixTree::query(Method method, std::string path){
             params.emplace(match.node->wildcardName, curPath);
         
         filters.add(match.node->filters);
-        filters.add(match.node->handlers[static_cast<size_t>(method)]);
+        if (i == paths.size() - 1){
+            filters.add(match.node->handlers[static_cast<size_t>(method)]);
+        }
         curNode = match.node;
     }
 
