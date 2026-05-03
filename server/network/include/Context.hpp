@@ -1,3 +1,4 @@
+#pragma once
 #include "Request.hpp"
 #include "Response.hpp"
 
@@ -36,41 +37,34 @@ enum class ContextState{
 
 class Context {
 public:
+    Context();
+
     Request req;
     Response res;
     Params params;
 
-    void start(){
-        if (state != ContextState::CREATED)
-            // TODO: replace with HTTP error later
-            throw std::runtime_error("start cannot be called");
-            
-        state = ContextState::REQUEST;
-        if (curFilter){
-            curFilter->handler(*this);
-        }
-        state = ContextState::RESPONSE;
-    }
+    void start();
+    void next();
 
-    // A filter must call it in order to continue the filter chain
-    void next(){
-        if (state != ContextState::REQUEST){
-            // TODO: replace with HTTP error later
-            throw std::runtime_error("invalid start call");
-        }
-
-        curFilter = curFilter->next;
-        if (curFilter){
-            curFilter->handler(*this);
-        }
-        state = ContextState::RESPONSE;
-    }
-
-private:
     Filter* curFilter;
     ContextState state{ContextState::CREATED};
 };
 
+
+class ContextBuilder {
+public:
+    ContextBuilder();
+
+    Context& getContext();
+
+    ContextBuilder& setRequest(const Request& request);
+    ContextBuilder& setRespose(const Response& response);
+    ContextBuilder& setParams(const Params& params);
+    ContextBuilder& setFilters(Filter* filter);
+
+private:
+    Context context;
+};
 
 }
 }

@@ -45,3 +45,60 @@ void Filters::add(const Filters* filters){
         cur = cur->next;
     }
 }
+
+Context::Context(){}
+
+void Context::start(){
+    if (state != ContextState::CREATED)
+        throw std::runtime_error("Context already started");
+        
+    state = ContextState::REQUEST;
+    if (curFilter){
+        curFilter->handler(*this);
+    }
+    
+    // Ensure we transition to RESPONSE if the chain ended or wasn't advanced
+    if (state == ContextState::REQUEST) {
+        state = ContextState::RESPONSE;
+    }
+}
+
+void Context::next(){
+    if (state != ContextState::REQUEST){
+        throw std::runtime_error("next() called outside of request phase");
+    }
+
+    if (curFilter && curFilter->next) {
+        curFilter = curFilter->next;
+        curFilter->handler(*this);
+    } else {
+        // End of chain
+        state = ContextState::RESPONSE;
+    }
+}
+
+ContextBuilder::ContextBuilder(){}
+
+Context& ContextBuilder::getContext(){
+    return context;
+}
+
+ContextBuilder& ContextBuilder::setRespose(const Response& res){
+    context.res = res;
+    return *this;
+}
+
+ContextBuilder& ContextBuilder::setRequest(const Request& req){
+    context.req = req;
+    return *this;
+}
+
+ContextBuilder& ContextBuilder::setFilters(Filter* filter){
+    context.curFilter = filter;
+    return *this;
+}
+
+ContextBuilder& ContextBuilder::setParams(const Params& params){
+    context.params = params;
+    return *this;
+}

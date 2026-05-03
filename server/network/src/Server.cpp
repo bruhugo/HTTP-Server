@@ -1,6 +1,7 @@
 #include "Server.hpp"
 #include "Request.hpp"
 #include "Logger.hpp"
+#include "Error.hpp"
 
 #include <algorithm>
 #include <system_error>
@@ -14,11 +15,19 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <fcntl.h>
 
 #define MAX_EVENTS 30
 #define REQUEST_BUFFER_SIZE 5000
 
 using namespace server::network;
+
+static void setNonBlocking(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1) throw std::runtime_error("fcntl F_GETFL");
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) 
+        throw std::runtime_error("fcntl F_SETFL");
+}
 
 Server::Server(uint32_t threads): state{ServerState::STARTING}, tp(threads) {}
 Server::~Server() {}
@@ -64,6 +73,8 @@ void Server::listenPort(std::string port){
     if (p == nullptr)
         throw std::runtime_error("error opening socket or binding");
 
+    setNonBlocking(serverfd);
+
     int err = listen(serverfd, 20);
     if (err != 0)
         throw std::runtime_error(strerror(errno));
@@ -107,9 +118,17 @@ void Server::acceptConnection(){
 
     LOG_DEBUG << "Connection accepted with fd " << fd;
 
+    try {
+        setNonBlocking(fd);
+    } catch (const std::exception& e) {
+        LOG_ERROR << "Failed to set non-blocking on fd " << fd << ": " << e.what();
+        close(fd);
+        return;
+    }
+
     epoll_event event;
     event.data.fd = fd;
-    event.events = EPOLLIN;
+    event.events = EPOLLIN | EPOLLONESHOT;
     if(epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event) == -1){
         close(fd);
         return;
@@ -125,25 +144,69 @@ void Server::handleRequest(int fd){
     LOG_DEBUG << "Data coming from connection in fd " << fd;
 
     tp.submit([this, fd]{
-        std::lock_guard<std::mutex> lk(mu);
-        auto it = connections.find(fd);
-        if (it == connections.end()) return;
+        Connection* conn_ptr = nullptr;
+        {
+            std::lock_guard<std::mutex> lk(mu);
+            auto it = connections.find(fd);
+            if (it == connections.end()) return;
+            conn_ptr = &it->second;
+        }
 
-        Connection& conn = it->second;
+        Connection& conn = *conn_ptr;
+        bool should_close = false;
 
         try {
             std::optional<Request> requestopt = conn.parseRequest();
-            if (!requestopt.has_value())
+            if (!requestopt.has_value()) {
+                // Not done parsing, re-arm epoll for this fd
+                epoll_event ev;
+                ev.events = EPOLLIN | EPOLLONESHOT;
+                ev.data.fd = fd;
+                epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &ev);
                 return;
+            }
             
             Request req = requestopt.value();
+            RadixQueryResult queryResponse = radixTree.query(
+                req.method, req.path.URL);
+            ContextBuilder builder;
+
+            Response res;
+
+            Context context = builder
+                .setParams(queryResponse.params)
+                .setFilters(queryResponse.filter.root)
+                .setRequest(req)
+                .setRespose(res)
+                .getContext();
+
+            context.start();
+
+            conn.writeResponse(context.res.encode());
             
-            RadixQueryResult res = radixTree.query(req.method, req.path.URL);
-            Context context;
-            
-            // TODO: logic to handle request
+            should_close = true;
+
+        } catch(const HttpError& e){
+            LOG_ERROR << "http error in connection " << fd << ": " << e.getPayload();
+            try {
+                Response response(e.getStatus(), e.getPayload());
+                conn.writeResponse(response.encode());
+            } catch (...) {}
+            should_close = true;
         } catch (const std::exception& e) {
-            // handle error or close connection
+            LOG_ERROR << "runtime error in connection " << fd << ": " << e.what();
+            try {
+                Response response(Status::InternalServerError, "Internal server error");
+                conn.writeResponse(response.encode());
+            } catch (...) {}
+            should_close = true;
+        } catch (...) {
+            LOG_ERROR << "unexpected error in connection " << fd;
+            should_close = true;
+        }
+
+        if (should_close) {
+            closeConnection(fd);
         }
     });
 }

@@ -1,12 +1,13 @@
 set(NETWORK_SOURCES
     src/Connection.cpp
+    src/Context.cpp
+    src/Error.cpp
     src/Header.cpp
+    src/RadixTree.cpp
     src/Request.cpp
+    src/Response.cpp
     src/Server.cpp
     src/Types.cpp
-    src/Response.cpp
-    src/Context.cpp
-    src/RadixTree.cpp
 )
 
 add_library(network ${NETWORK_SOURCES})

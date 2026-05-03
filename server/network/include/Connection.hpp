@@ -23,7 +23,7 @@ public:
     Connection& operator=(const Connection&) = delete;
 
     std::optional<Request> parseRequest();
-    void writeResponse();
+    void writeResponse(const std::string& str);
 private:
     std::unique_ptr<RequestParser> parser;
     int fd;

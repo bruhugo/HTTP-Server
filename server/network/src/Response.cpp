@@ -7,7 +7,7 @@ using namespace server::network;
 
 Response::Response(): statusCode{Status::OK}{}
 Response::Response(int status, std::string msg): 
-    statusCode{status}, body{msg}{}
+    statusCode{status}, body{std::move(msg)}{}
 
 void Response::setStatusCode(int status) noexcept{
     statusCode = status;
@@ -21,10 +21,15 @@ std::string Response::encode(){
     std::stringstream stream;
     std::string br = "\r\n";
 
+    // Ensure Content-Length is set if body is not empty
+    if (!body.empty() && headers.get(HeaderTypes::ContentLength) == std::nullopt) {
+        headers.set(HeaderTypes::ContentLength, std::to_string(body.size()));
+    }
+
     std::string reason = "Response";
     auto it = statusMessages.find(statusCode);
     if (it != statusMessages.end())
-        reason = (*it).second;
+        reason = it->second;
 
     // status line
     stream 
@@ -34,11 +39,11 @@ std::string Response::encode(){
         << reason
         << br;
     
-    // request line
+    // headers
     auto h = headers.data();
 
     for (auto const& [key, values] : h)
-        for (auto value : values)
+        for (auto const& value : values)
             stream << key << ": " << value << br;
     
     // body

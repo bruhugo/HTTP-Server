@@ -25,6 +25,7 @@ class Request
 {
 public:
     Request(int conn);
+    Request();
 
     Path path;
     Headers headers;

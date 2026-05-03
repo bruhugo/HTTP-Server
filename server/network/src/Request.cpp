@@ -10,6 +10,7 @@ using namespace server::network;
 
 // --- REQUEST --- 
 Request::Request(int conn): connsocket{conn}{}
+Request::Request(){}
 
 // --- REQUEST PARSER --- 
 RequestParser::RequestParser(int connfd): state(REQUEST_LINE), offset(0), canHaveBody(false), contentLength(0), fd{connfd}, request(fd){}
@@ -106,8 +107,10 @@ bool RequestParser::parseHeaders(std::string_view buffer){
 }
 
 bool RequestParser::parseBody(std::string_view buffer){
-    request.body.append(buffer);
-    offset += buffer.size();
+    size_t remaining = contentLength - request.body.size();
+    size_t to_add = std::min(remaining, buffer.size());
+    request.body.append(buffer.substr(0, to_add));
+    offset += to_add;
     return request.body.size() >= contentLength;
 }
 
