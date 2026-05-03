@@ -6,3 +6,5 @@ MAY 2 2026
 MAY 3 2026
 
 - ensure examples are working
+- mimetypes
+- static file

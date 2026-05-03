@@ -38,3 +38,7 @@ void Headers::add(std::string key, std::string value){
 std::unordered_map<std::string, HeaderList> Headers::data() const {
     return headers;
 }
+
+void Headers::setContentType(std::string contentType){
+    set("Content-Type", contentType);
+}

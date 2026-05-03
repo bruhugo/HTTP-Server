@@ -51,3 +51,34 @@ std::string Response::encode(){
 
     return stream.str();
 }
+
+
+void Response::JSON(int status, std::string body) {
+    setStatusCode(status);
+    headers.setContentType(Mimetype::ApplicationJson);
+    setBody(body);
+}
+
+void Response::text(int status, std::string body) {
+    setStatusCode(status);
+    headers.setContentType(Mimetype::TextPlain);
+    setBody(body);
+}
+
+void Response::javaScript(int status, std::string body) {
+    setStatusCode(status);
+    headers.setContentType(Mimetype::TextJavascript);
+    setBody(body);
+}
+
+void Response::CSS(int status, std::string body) {
+    setStatusCode(status);
+    headers.setContentType(Mimetype::TextCSS);
+    setBody(body);
+}
+
+void Response::HTML(int status, std::string body) {
+    setStatusCode(status);
+    headers.setContentType(Mimetype::TextHTML);
+    setBody(body);
+}

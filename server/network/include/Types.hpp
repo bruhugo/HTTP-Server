@@ -32,7 +32,6 @@ bool methodHasBody(Method m);
 
 
 // STATUS CODE
-
 namespace Status{
     const int OK = 200;
     const int Created = 201;
@@ -46,6 +45,21 @@ namespace Status{
 
     const int InternalServerError = 500;
     const int NotImplemented = 501;
+}
+
+// MIME TYPES
+namespace Mimetype {
+    const std::string ApplicationJson =     "application/json";
+    const std::string ApplicationPdf =      "application/pdf";
+    
+    const std::string TextJavascript =      "text/json";
+    const std::string TextHTML =            "text/html";
+    const std::string TextCSS =             "text/css";
+    const std::string TextPlain =           "text/plain";
+
+    const std::string ImageJpeg =           "image/jpeg";
+    const std::string ImagePng =           "image/png";
+    const std::string ImageGif =           "image/gif";
 }
 
 

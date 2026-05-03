@@ -1,4 +1,5 @@
 #include "RadixTree.hpp"
+#include "Error.hpp"
 
 #include <stdexcept>
 
@@ -26,14 +27,17 @@ RadixTree::~RadixTree(){
     delete root;
 }
 
+static std::string normalizeRootPath(std::string path){
+    return path == "/" ? "" : path;
+}
 
 void RadixTree::addHandler(Method method, std::string path, Handler handler){
-    RadixTreeNode* node = traverseAndCreate(path);
+    RadixTreeNode* node = traverseAndCreate(normalizeRootPath(path));
     node->handlers[static_cast<size_t>(method)] = handler;
 }
 
 void RadixTree::addFilter(std::string path, Handler handler){
-    RadixTreeNode* node = traverseAndCreate(path);
+    RadixTreeNode* node = traverseAndCreate(normalizeRootPath(path));
     node->filters->add(handler);
 }
 
@@ -138,8 +142,7 @@ RadixQueryResult RadixTree::query(Method method, std::string path){
         std::string curPath = paths.at(i);
         MatchChildren match = findChildren(curNode, curPath);
         if (!match)
-            // TODO: make it HTTP error later
-            throw std::runtime_error("resource not found");
+            throw HttpError::NotFoundError("Not resource found for path " + path);
 
         if (match.matchType == MatchType::WILDCARD)
             params.emplace(match.node->wildcardName, curPath);

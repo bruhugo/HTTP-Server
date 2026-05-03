@@ -16,8 +16,13 @@ public:
     Headers headers;
 
     void setStatusCode(int code) noexcept;
-
     void setBody(std::string) noexcept;
+
+    void JSON(int status, std::string body);
+    void text(int status, std::string body);
+    void javaScript(int status, std::string body);
+    void CSS(int status, std::string body);
+    void HTML(int status, std::string body);
 
     std::string encode();
 

@@ -1,12 +1,22 @@
 #include "Server.hpp"
+#include "Logger.hpp"
 
 using namespace server::network;
+using namespace server::basic;
 
 int main(){
+    Logger::setLogLevel("DEBUG");
+
     Server server(20);
 
-    server.get("/hello", [](Context& ctx){
-        ctx.res.setBody("hello my friend");
+    server.use("/", [](Context& ctx){
+        LOG_DEBUG << "Log before chain";
+        ctx.next();
+        LOG_DEBUG << "Log after chain";
+    });
+
+    server.get("/health", [](Context& ctx){
+        ctx.res.JSON(200, "{\"status\": \"active\"}");
     });
 
     server.get("/echo/:echomsg", [](Context& ctx){
