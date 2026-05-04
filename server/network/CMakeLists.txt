@@ -7,6 +7,7 @@ set(NETWORK_SOURCES
     src/Request.cpp
     src/Response.cpp
     src/Server.cpp
+    src/Static.cpp
     src/Types.cpp
 )
 

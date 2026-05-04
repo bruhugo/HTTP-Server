@@ -2,9 +2,11 @@
 #include "Request.hpp"
 #include "Logger.hpp"
 #include "Error.hpp"
+#include "Static.hpp"
 
 #include <algorithm>
 #include <system_error>
+#include <filesystem>
 
 #include <netinet/in.h>
 #include <netdb.h>
@@ -258,6 +260,16 @@ void Server::request(Method method, std::string path, Handler handler){
     LOG_INFO << "Handler added on path " << path;
     assertServerState(ServerState::STARTING);
     radixTree.addHandler(method, path, handler);
+}
+
+void Server::serveHttpFile(std::string path, std::string localpath){
+    LOG_INFO << "Static file added on path " << path;
+    assertServerState(ServerState::STARTING);
+    radixTree.addHandler(
+        Method::GET, 
+        path, 
+        staticFileHandler(localpath, Mimetype::TextHTML)
+    );
 }
 
 void Server::assertServerState(ServerState desiredState){

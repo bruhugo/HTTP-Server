@@ -31,6 +31,8 @@ public:
     void patch(std::string path, Handler handler);
     void del(std::string path, Handler handler);
 
+    void serveHttpFile(std::string path, std::string localpath);
+
     void request(Method method, std::string path, Handler handler);
     
     void listenPort(std::string port);
