@@ -97,6 +97,9 @@ bool RequestParser::parseHeaders(std::string_view buffer){
         Header header = parseHeaderLine(currentHeader);
         request.headers.set(header.key, header.value);
 
+        if (header.key == "Cookie")
+            request.cookies.add(Cookie::unmarshal(header.value));
+
         if (header.key == HeaderTypes::ContentLength)
             contentLength = std::stoul(header.value);
 

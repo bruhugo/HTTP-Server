@@ -45,6 +45,9 @@ std::string Response::encode(){
     for (auto const& [key, values] : h)
         for (auto const& value : values)
             stream << key << ": " << value << br;
+
+    for (auto& cookiePair : cookies.cookies)
+        stream << "Set-Cookie: " << cookiePair.second.marshal() << br;
     
     // body
     stream << br << body;

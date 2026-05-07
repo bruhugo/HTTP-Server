@@ -142,6 +142,13 @@ void Server::acceptConnection(){
                         std::forward_as_tuple(fd));
 }
 
+static void rearmEpoll(int epollfd, int fd){
+    epoll_event ev;
+    ev.events = EPOLLIN | EPOLLONESHOT;
+    ev.data.fd = fd;
+    epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &ev);
+}
+
 void Server::handleRequest(int fd){ 
     LOG_DEBUG << "Data coming from connection in fd " << fd;
 
@@ -160,11 +167,7 @@ void Server::handleRequest(int fd){
         try {
             std::optional<Request> requestopt = conn.parseRequest();
             if (!requestopt.has_value()) {
-                // Not done parsing, re-arm epoll for this fd
-                epoll_event ev;
-                ev.events = EPOLLIN | EPOLLONESHOT;
-                ev.data.fd = fd;
-                epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &ev);
+                rearmEpoll(epollfd, fd);
                 return;
             }
             

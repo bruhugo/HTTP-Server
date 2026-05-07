@@ -2,6 +2,7 @@
 
 #include "Header.hpp"
 #include "Types.hpp"
+#include "Cookie.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -32,6 +33,7 @@ public:
     Method method;
     std::string body;
     std::string httpVersion;
+    Cookies cookies;
 private:
     int connsocket;
 };
@@ -46,6 +48,7 @@ public:
 
     // Returns true if it's done parsing
     bool parse(std::string_view buffer);
+
 private:
     enum State {
         REQUEST_LINE,
@@ -71,6 +74,7 @@ private:
 
     bool canHaveBody;
     size_t contentLength;
+
 
     int fd;
 };

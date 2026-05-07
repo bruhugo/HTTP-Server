@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Header.hpp"
+#include "Cookie.hpp"
 
 #include <string>
 
@@ -26,6 +27,7 @@ public:
 
     std::string encode();
 
+    Cookies cookies;
 private:
     int statusCode; 
     std::string body; 

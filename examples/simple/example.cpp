@@ -1,5 +1,9 @@
 #include "Server.hpp"
 #include "Logger.hpp"
+#include "Cookie.hpp"
+
+#include <optional>
+
 
 using namespace server::network;
 using namespace server::basic;
@@ -27,6 +31,23 @@ int main(){
     server.post("/echo", [](Context& ctx){
         auto body = ctx.req.body;
         ctx.res.setBody(body);
+    });
+
+    server.get("/cookie", [](Context& ctx){
+        std::optional<Cookie> cookieopt = ctx.req.cookies.get("cookie");
+        if (!cookieopt){
+            LOG_DEBUG << "cookie not found";
+        }else {
+            LOG_DEBUG << "cookie found with value" << cookieopt.value().value;
+        }
+
+        CookieBuilder builder;
+        Cookie cookie = builder
+            .name("cookie")
+            .value("hello world")
+            .build();
+
+        ctx.res.cookies.add(cookie);
     });
 
     server.listenPort("8080");

@@ -2,6 +2,7 @@ set(NETWORK_SOURCES
     src/Cache.cpp
     src/Connection.cpp
     src/Context.cpp
+    src/Cookie.cpp
     src/Error.cpp
     src/Header.cpp
     src/RadixTree.cpp
