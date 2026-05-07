@@ -1,4 +1,5 @@
 set(NETWORK_SOURCES
+    src/Cache.cpp
     src/Connection.cpp
     src/Context.cpp
     src/Error.cpp

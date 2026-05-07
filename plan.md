@@ -8,3 +8,8 @@ MAY 3 2026
 - ensure examples are working
 - mimetypes
 - static file
+
+MAY 7 2026
+
+- finish caching
+- implement cookies

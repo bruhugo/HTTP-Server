@@ -268,8 +268,13 @@ void Server::serveHttpFile(std::string path, std::string localpath){
     radixTree.addHandler(
         Method::GET, 
         path, 
-        staticFileHandler(localpath, Mimetype::TextHTML)
+        staticFileHandler(localpath, Mimetype::TextHTML, cache)
     );
+}
+
+void Server::enableCache(uint32_t memoryLimit) {
+    assertServerState(ServerState::STARTING);
+    cache.enable(memoryLimit);
 }
 
 void Server::assertServerState(ServerState desiredState){

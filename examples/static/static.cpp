@@ -8,6 +8,7 @@ int main(){
     Logger::setLogLevel("DEBUG");
 
     Server server(20);
+    server.enableCache(30);
 
     server.serveHttpFile("/index.html", "static/test.html");
 
